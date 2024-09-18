@@ -37,6 +37,28 @@ module.exports = function (io) {
 
             updateInstructorsUserList(classId);
 
+            socket.on('editor-update', (data) => {
+                if (session.connectedUsers[socket.id]?.hasEditAccess || session.approvedUsers.has(socket.id)) {
+                    session.editorContent = data.content;
+                    socket.to(classId).emit('editor-update', data);
+                }
+            });
+
+            socket.on('output-update', (data) => {
+                session.outputContent = data.output;
+                socket.to(classId).emit('output-update', data);
+            });
+
+            socket.on('toggle-compiler', (isCompilerVisible) => {
+                session.showCompiler = isCompilerVisible;
+                io.to(classId).emit('toggle-compiler-update', session.showCompiler);
+            });
+
+            socket.on('language-change', (newLanguage) => {
+                session.currentLanguage = newLanguage;
+                io.to(classId).emit('language-change', newLanguage);
+            });
+
             socket.on('disconnect', () => {
                 console.log('A user disconnected:', socket.id);
                 session.approvedUsers.delete(socket.id);
