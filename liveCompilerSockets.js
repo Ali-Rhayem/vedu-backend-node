@@ -59,6 +59,41 @@ module.exports = function (io) {
                 io.to(classId).emit('language-change', newLanguage);
             });
 
+            socket.on('request-edit-access', (userData) => {
+                session.accessRequests.push({ userId: socket.id, userData });
+                session.instructors.forEach((instructorId) => {
+                    io.to(instructorId).emit('access-request-update', session.accessRequests);
+                });
+            });
+
+            socket.on('respond-to-request', ({ userId, approve }) => {
+                if (approve) {
+                    if (session.connectedUsers[userId]) {
+                        session.connectedUsers[userId].hasEditAccess = true;
+                    }
+                    session.approvedUsers.add(userId);
+                    io.to(userId).emit('access-granted');
+                }
+                session.accessRequests = session.accessRequests.filter((request) => request.userId !== userId);
+                session.instructors.forEach((instructorId) => {
+                    io.to(instructorId).emit('access-request-update', session.accessRequests);
+                });
+                updateInstructorsUserList(classId);
+            });
+
+            socket.on('update-user-access', ({ userId, hasEditAccess }) => {
+                if (session.connectedUsers[userId]) {
+                    session.connectedUsers[userId].hasEditAccess = hasEditAccess;
+                    if (hasEditAccess) {
+                        session.approvedUsers.add(userId);
+                    } else {
+                        session.approvedUsers.delete(userId);
+                    }
+                    io.to(userId).emit('access-updated', hasEditAccess);
+                    updateInstructorsUserList(classId);
+                }
+            });
+
             socket.on('disconnect', () => {
                 console.log('A user disconnected:', socket.id);
                 session.approvedUsers.delete(socket.id);
