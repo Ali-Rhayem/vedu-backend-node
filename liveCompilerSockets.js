@@ -39,6 +39,16 @@ module.exports = function (io) {
                 updateInstructorsUserList(classId);
             });
 
+            function updateInstructorsUserList(classId) {
+                const userList = Object.keys(session.connectedUsers).map((id) => ({
+                    userId: id,
+                    userData: session.connectedUsers[id].userData,
+                    hasEditAccess: session.connectedUsers[id].hasEditAccess,
+                }));
+                session.instructors.forEach((instructorId) => {
+                    io.to(instructorId).emit('user-list-update', userList);
+                });
+            }
         });
     });
 };
