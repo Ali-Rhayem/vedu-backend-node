@@ -31,6 +31,12 @@ module.exports = function (io) {
                 session.approvedUsers.add(socket.id);
             }
 
+            socket.emit('editor-content', session.editorContent);
+            socket.emit('toggle-compiler-update', session.showCompiler);
+            socket.emit('language-change', session.currentLanguage);
+
+            updateInstructorsUserList(classId);
+
             socket.on('disconnect', () => {
                 console.log('A user disconnected:', socket.id);
                 session.approvedUsers.delete(socket.id);
