@@ -13,6 +13,8 @@ const io = socketIO(server, {
 const initLiveCompilerSockets = require("./liveCompilerSockets");
 initLiveCompilerSockets(io);
 
+const initAIAssistantSockets = require("./AiAssistant.js"); 
+initAIAssistantSockets(io);
 
 io.on("connection", (socket) => {
   socket.on("join", ({ classId, userData }) => {
